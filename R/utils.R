@@ -4,7 +4,11 @@
 
 #' @noMd
 longlat2proj <- function(x, y, proj, longlat) {
-  coor <- data.frame(lon=x, lat=y)
+  #coor <- data.frame(lon=as.numeric(x), lat=as.numeric(y))
+  if (is.null(x) || is.null(y)) {
+    return(c(NULL, NULL))
+  }
+  coor <- matrix(c(x,y), 1)
   pt <- sp::SpatialPoints(coor, proj4string=longlat)
   pt <- sp::spTransform(pt, proj)
   return(c(pt@coords[1,1], pt@coords[1,2]))
@@ -171,6 +175,9 @@ decode_detections <- function(detections_string) {
   reticulate::py_run_string(cmd)
   decode_geometry <- mvt$decode(reticulate::py$decoded_data)
   coordinates <- decode_geometry[[1]]$features[[1]]$geometry$coordinates
+  if (length(coordinates) == 0 ) {
+    return(0)
+  }
   coords <- coordinates[[1]]
   coords_matrix <- do.call(rbind, coords)
   polygon <- sf::st_polygon(list(coords_matrix))
@@ -227,7 +234,7 @@ read_segment_perc <- function(segment_perc) {
 
 #' @noMd
 validate_fields <- function(input_fields) {
-  valid_fields <- as.vector(available_field()[1])
+  valid_fields <- as.vector(available_field()[[1]])
   invalid_fields <- base::setdiff(input_fields,
                                   valid_fields)
   if (length(invalid_fields) > 0) {
@@ -281,7 +288,7 @@ g_seg <- function(url) {
       sim_wL = 3,
       sim_wA = 10,
       sim_wB = 10,
-      sim_color_radius = 5,
+      sim_color_radius = 3,
       verbose = FALSE
     )
   })
@@ -298,15 +305,25 @@ gv_calc <- function(img_segmentation) {
   R <- img_segmentation[,,1]
   G <- img_segmentation[,,2]
   B <- img_segmentation[,,3]
+  redThreImgU <- R < 0.6
+  greenThreImgU <- G < 0.9
+  blueThreImgU <- B < 0.6
+  shadowRedU <- R < 0.3
+  shadowGreenU <- G < 0.3
+  shadowBlueU <- B < 0.3
+  threImgU <-  redThreImgU * blueThreImgU * greenThreImgU
+  imgShadow <- shadowRedU * shadowGreenU * shadowBlueU
   # calculate the difference between G band with others
   g_r_dif <- G - R
   g_b_dif <- G - B
-  # difImg <- g_r_dif*g_b_dif
-  # g_r_dif <- g_r_dif > 0
-  # difImg <- difImg > 0
-  greenImg <- (g_r_dif>0)*(g_b_dif>0)*(G>0.2)
+  ExG <- (g_r_dif + g_b_dif)/(G + R + B)
+  # v <- as.vector(ExG)
+  # v <- v[!is.na(v)]
+  #threshold <- max(v)
+  greenImg <- (ExG > 0.05)*threImgU + (ExG > 0.05)*imgShadow
   greenNum <- length(which(greenImg != 0))
-  #image(greenImg, useRaster=TRUE, axes=FALSE)
+  #greenNum <- length(which(ExG == threshold))
+  # raster::plot(raster::raster(ExG > 0.05))
   remove(greenImg)
   return(greenNum/total)
 }

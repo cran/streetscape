@@ -64,7 +64,7 @@ strview_searchByGeo <- function(x,y,r,
   if (missing(epsg)) {
     stop("epsg is missing. Please set epsg code")
   }
-  if (length(fields) != 0 && inherits(fields,"character")) {
+  if (length(fields) != 0 && !inherits(fields,"character")) {
     stop("fields has to be a vector of characters")
   }
   if (length(fields) > 0) {
@@ -91,7 +91,8 @@ strview_searchByGeo <- function(x,y,r,
   on.exit(options(timeout = original_timeout), add = TRUE)
   options(timeout=9999)
   fields <- c(fields,
-              c('is_pano', 'thumb_256_url', 'thumb_original_url',
+              c('is_pano', 'thumb_256_url', 'thumb_1024_url',
+                'thumb_2048_url', 'thumb_original_url',
                 'height', 'width', 'computed_geometry',
                 'computed_altitude', 'detections.geometry',
                 'detections.value'))
@@ -100,42 +101,53 @@ strview_searchByGeo <- function(x,y,r,
   if (inherits(response, "numeric")) {
     return(0)
   }
-  dfs <- lapply(response$data, function(x) {
-    data.frame(
-      id = return_field(x, 'id'),
-      username = ifelse('creator' %in% names(x),
-                        return_field(x$creator, 'username'), NA),
-      creator_id = ifelse('creator' %in% names(x),
-                          return_field(x$creator, 'id'), NA),
-      make = return_field(x, 'make'),
-      model = return_field(x, 'model'),
-      captured_at = return_field(x, 'captured_at'),
-      is_pano = x$is_pano,
-      compass_angle = return_field(x, 'compass_angle'),
-      computed_compass_angle = return_field(x, 'computed_compass_angle'),
-      thumb_256_url = x$thumb_256_url,
-      thumb_1024_url = return_field(x, 'thumb_1024_url'),
-      thumb_2048_url = return_field(x, 'thumb_2048_url'),
-      thumb_original_url = return_field(x, 'thumb_original_url'),
-      height = x$height,
-      width = x$width,
-      lon = x$computed_geometry$coordinates[[1]],
-      lat = x$computed_geometry$coordinates[[2]],
-      coordinates.x = longlat2proj(x$computed_geometry$coordinates[[1]],
-                                   x$computed_geometry$coordinates[[2]],
-                                   proj,
-                                   longlat)[1],
-      coordinates.y = longlat2proj(x$computed_geometry$coordinates[[1]],
-                                   x$computed_geometry$coordinates[[2]],
-                                   proj,
-                                   longlat)[2],
-      altitude = return_field(x, 'altitude'),
-      computed_altitude = x$computed_altitude,
-      detections = I(ifelse('detections' %in% names(x),
-                            return_detections(x$detections$data), NA))
-    )
-  })
+  dfs <- 0
+  tryCatch(
+    dfs <- lapply(response$data, function(x) {
+      xy <- longlat2proj(x$computed_geometry$coordinates[[1]],
+                         x$computed_geometry$coordinates[[2]],
+                         proj,
+                         longlat)
+      data.frame(
+        id = return_field(x, 'id'),
+        username = ifelse('creator' %in% names(x),
+                          return_field(x$creator, 'username'), NA),
+        creator_id = ifelse('creator' %in% names(x),
+                            return_field(x$creator, 'id'), NA),
+        make = return_field(x, 'make'),
+        model = return_field(x, 'model'),
+        captured_at = format(as.POSIXct(return_field(x, 'captured_at')/1000,
+                                 origin="1970-01-01"),
+                             format='%Y-%m-%d %H:%M:%S'),
+        is_pano = x$is_pano,
+        compass_angle = return_field(x, 'compass_angle'),
+        computed_compass_angle = return_field(x, 'computed_compass_angle'),
+        thumb_256_url = x$thumb_256_url,
+        thumb_1024_url = return_field(x, 'thumb_1024_url'),
+        thumb_2048_url = return_field(x, 'thumb_2048_url'),
+        thumb_original_url = return_field(x, 'thumb_original_url'),
+        height = x$height,
+        width = x$width,
+        lon = x$computed_geometry$coordinates[[1]],
+        lat = x$computed_geometry$coordinates[[2]],
+        coordinates.x = xy[1],
+        coordinates.y = xy[2],
+        altitude = return_field(x, 'altitude'),
+        computed_altitude = x$computed_altitude,
+        detections = I(ifelse('detections' %in% names(x),
+                              return_detections(x$detections$data), NA))
+      )
+    }),
+    error = function(e){e}
+  )
+  if (inherits(dfs, "numeric")) {
+    return(0)
+  }
   combined_df <- do.call(rbind, dfs)
+  combined_df <- combined_df[!combined_df$coordinates.x == "null", ]
+  if (nrow(combined_df) == 0) {
+    return(0)
+  }
   rownames(combined_df) <- seq(nrow(combined_df))
   if ('creator' %in% fields) {
     fields <- c('username', 'creator_id', fields)
@@ -282,7 +294,7 @@ strview_search_osm <- function(bbox,
     lines <- osm_data$osm_lines$geometry
     lines <- sf::st_union(lines)
     suppressMessages(
-      samples <- sf::st_sample(lines, size = 20, type = "regular")
+      samples <- sf::st_sample(lines, size = size, type = "regular")
     )
     coords <- sf::st_coordinates(samples)
     # lines <- sf::st_transform(lines, epsg)
