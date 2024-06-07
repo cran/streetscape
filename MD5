@@ -1,5 +1,5 @@
-852276569aaebd7c6fc9e1858ddf06a9 *DESCRIPTION
-cdcdd3f220e2b14153c650823814d2db *NAMESPACE
+956ee000c179bb74c3bcd87edd5bf4fc *DESCRIPTION
+0eaea46d92d861f546ef63d2723f42ff *NAMESPACE
 9900daa8b6a05ad9c5de2dad443c1d1e *R/StreetscapeDataFrame.R
 2055bc7a496e7d65329446a307b248bb *R/package.R
 13c3d11fc7d9a005b55e9df6adf34f1d *R/scdataframe-data.R
@@ -7,7 +7,7 @@ bd3fd89169216b9560472b72558bd10f *R/see_streetscape-class.R
 510d81cb0f0b3a44410fa5d0e1b44b96 *R/show_list.R
 d5084684d16fde6aad741f6180fd1888 *R/str_view2qualtrics.R
 6ce702eca323e14f692eae96723e8e5a *R/str_view_search.R
-1c9df2223403867964d693096341dcaa *R/utils.R
+474f64ad72479763d774b422bf5148fa *R/utils.R
 1fe85b44a3617a910b6ab4727f3a3f87 *build/vignette.rds
 5d06bd67ec42a37497799828adcd4b3c *data/scdataframe.RData
 a90a62891cff593ee426db4f04b77cb5 *inst/detection.txt
