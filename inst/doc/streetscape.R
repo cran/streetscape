@@ -2,15 +2,15 @@
 #  bbox <- c(-83.751812,42.272984,-83.741255,42.279716)
 #  data <- streetscape::strview_searchByGeo(bbox = bbox,
 #                                           epsg = 2253,
-#                                           token = "token")
+#                                           token = "")
 #  
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  data <- streetscape::strview_searchByGeo(x = -83.741289,
-#                                           y = 42.270146,
+#  data <- streetscape::strview_searchByGeo(x = -83.743460634278,
+#                                           y = 42.277848830294,
 #                                           r = 100,
 #                                           epsg = 2253,
-#                                           token = "token")
+#                                           token = "")
 
 ## ----eval = FALSE-------------------------------------------------------------
 #  # check supported filters
@@ -18,7 +18,7 @@
 #  # only search for 360-degree street views
 #  data <- streetscape::strview_searchByGeo(bbox = bbox,
 #                                           epsg = 2253,
-#                                           token = "token",
+#                                           token = "",
 #                                           is_pano = TRUE)
 
 ## ----eval = FALSE-------------------------------------------------------------
@@ -26,33 +26,34 @@
 #    x = -83.743460634278,
 #    y = 42.277848830294,
 #    epsg = 2253,
-#    token = 'token')
+#    token = '')
 
 ## ----eval = FALSE-------------------------------------------------------------
 #  bbox <- c(-83.752041,42.274896,-83.740711,42.281945)
 #  data <- streetscape::strview_search_osm(
 #          bbox = bbox,
 #          epsg = 2253,
-#          token = 'token',
+#          token = '',
 #          size = 100)
 
 ## ----eval = FALSE-------------------------------------------------------------
 #  data$gvi()
 
 ## ----eval = FALSE-------------------------------------------------------------
+#  streetviewdata <- streetscape::scdataframe
 #  # calculate the percentage of each segmentation
 #  data$decodeDetection()
-#  data$data$segmentation
+#  data$data$segmentation[[1]]
 #  # extract the semantic segmentation of a street view
 #  mask <- streetviewdata$get_mask(1)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  map1 <- streetviewdata$mapPreview('meta')
+#  map1 <- data$mapPreview('meta')
 #  print(map1)
 #  # assume that one has run data$gvi() and data$decodeDetection()
-#  map2 <- streetviewdata$mapPreview('seg')
+#  map2 <- data$mapPreview('seg')
 #  print(map2)
-#  map3 <- streetviewdata$mapPreview('gvi')
+#  map3 <- data$mapPreview('gvi')
 #  print(map3)
 
 ## ----eval = FALSE-------------------------------------------------------------

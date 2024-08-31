@@ -1,6 +1,7 @@
 #' @importFrom httr GET content status_code
 #' @importFrom sp SpatialPoints spTransform
 #' @importFrom dplyr %>%
+#' @importFrom cli cli_ul
 
 #' @noMd
 longlat2proj <- function(x, y, proj, longlat) {
@@ -55,6 +56,52 @@ get_filters <- function(...) {
   })
   filters <- paste(as.vector(filters), collapse="&")
   return(filters)
+}
+
+#' @noMd
+create_check_token <- function(api_token, ifsave = TRUE) {
+  if (api_token == "") {
+    if (isFALSE(file.exists("streetscape_token.sysdata"))) {
+      cli::cli_ul(
+        "Create a Mapillary API Token at https://www.mapillary.com/developer/api-documentation")
+      utils::browseURL("https://www.mapillary.com/developer/api-documentation")
+      cli::cli_ul("Enter your Mapillary API Token:")
+
+      api_token <- readline()
+
+    } else {
+
+      api_token <- utils::read.table("streetscape_token.sysdata", stringsAsFactors = FALSE)[1, 1]
+    }
+  }
+
+  # check token
+  base_url <- paste("https://graph.mapillary.com/images?access_token=",
+                    api_token,
+                    sep = "")
+
+  if (httr::GET(base_url)$status != 200) {
+    return_message <- httr::GET(base_url) %>% httr::content()
+    stop(paste0('code:', return_message$error$code, '. ',
+                return_message$error$message, '. ',
+                "Invalid API Token"))
+  } else if (httr::GET(base_url)$status == 200) {
+    if (isFALSE(file.exists("streetscape_token.sysdata"))) {
+      # cli::cli_ul("Save your Mapillary API Token? y (yes) / n (no)")
+      if (ifsave) {
+        cli::cli_ul("You can save your Mapillary API Token so that you do not need to specify it every time call the function")
+        ifsave <- readline("Save your Mapillary API Token??? y (yes) / n (no): ")
+        if (ifsave == 'y' | ifsave == 'yes') {
+          # save token
+          utils::write.table(api_token,
+                             file = "streetscape_token.sysdata",
+                             col.names = FALSE,
+                             row.names = FALSE)
+        }
+      }
+    }
+    return(api_token)
+  }
 }
 
 #' @noMd
@@ -285,7 +332,11 @@ g_seg <- function(url) {
   if (httr::status_code(response) != 200) {
     return(0)
   }
-  download.file(url, temp_file, method='auto', quiet = TRUE, mode = mode)
+  if (isTRUE(Sys.info()[1]=="Windows") == TRUE){
+    download.file(url, temp_file, method='auto', quiet = TRUE, mode = 'wb')
+  } else {
+    download.file(url, temp_file, method='auto', quiet = TRUE)
+  }
   # read and segment the image
   img <- OpenImageR::readImage(temp_file)
   init <- SuperpixelImageSegmentation::Image_Segmentation$new()
