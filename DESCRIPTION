@@ -1,7 +1,7 @@
 Package: streetscape
 Type: Package
-Title: Collect And Investigate Street Views For Urban Science
-Version: 1.0.4
+Title: Collect and Investigate Street Views for Urban Science
+Version: 1.0.5
 Authors@R: c(person("Xiaohao", "Yang", role = c("aut", "cre", "cph"), email = "xiaohaoy@umich.edu"),
            person("Derek", "Van Berkel", role = c("aut")),
            person("Mark", "Lindquist", role = c("aut")))
@@ -24,10 +24,10 @@ Imports: rlang, cli, methods, dplyr, sf, sp, httr, reticulate, osmdata,
 Config/reticulate: list( packages = list( list(package =
         "mapbox_vector_tile", pip = TRUE) ) )
 NeedsCompilation: no
-Packaged: 2024-12-19 21:49:00 UTC; yangxiaohao
+Packaged: 2025-01-21 14:10:34 UTC; yangxiaohao
 Author: Xiaohao Yang [aut, cre, cph],
   Derek Van Berkel [aut],
   Mark Lindquist [aut]
 Maintainer: Xiaohao Yang <xiaohaoy@umich.edu>
 Repository: CRAN
-Date/Publication: 2024-12-19 22:30:02 UTC
+Date/Publication: 2025-01-21 14:50:03 UTC
